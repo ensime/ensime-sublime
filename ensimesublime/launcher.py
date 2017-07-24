@@ -24,7 +24,10 @@ class EnsimeProcess(object):
     def stop(self):
         if self.process is None:
             return
-        os.kill(self.process.pid, signal.SIGTERM)
+        try:
+            os.kill(self.process.pid, signal.SIGTERM)
+        except PermissionError:
+            subprocess.Popen("taskkill /F /T /PID %i" % self.process.pid , shell=True)
         self.__cleanup()
         self.__stopped_manually = True
 
