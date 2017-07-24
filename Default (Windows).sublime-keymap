@@ -1,5 +1,5 @@
 [
   { "keys": ["alt+i"], "command": "ensime_add_import" },
-  { "keys": ["ctrl+alt+e"], "command": "ensime_show_errors" },
+  { "keys": ["ctrl+alt+e"], "command": "ensime_toggle_errors" },
   { "keys": ["ctrl+alt+o"], "command": "ensime_organise_imports" }
 ]

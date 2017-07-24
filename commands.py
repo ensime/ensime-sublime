@@ -45,7 +45,7 @@ class EnsimeShutdown(EnsimeWindowCommand):
         self.env.shutdown()
 
 
-class EnsimeShowErrors(EnsimeWindowCommand):
+class EnsimeToggleErrors(EnsimeWindowCommand):
     def is_enabled(self):
         return bool(self.env and
                     self.env.is_connected() and
@@ -53,8 +53,11 @@ class EnsimeShowErrors(EnsimeWindowCommand):
                     self.env.client.analyzer_ready)
 
     def run(self):
-        self.env.editor.show_errors = True
-        self.env.editor.redraw_all_highlights()
+        if self.env.editor.show_errors:
+            self.env.editor.hide_phantoms()
+        else:
+            self.env.editor.show_errors = True
+            self.env.editor.redraw_all_highlights()
 
 
 class EnsimeEventListener(sublime_plugin.EventListener):
@@ -85,7 +88,7 @@ class EnsimeEventListener(sublime_plugin.EventListener):
             else:
                 env.editor.ignore_prefix = None
 
-            if (env.editor.current_prefix and prefix == env.editor.current_prefix):
+            if (env.editor.current_prefix is not None and prefix == env.editor.current_prefix):
                 env.editor.current_prefix = None
                 if view.is_popup_visible():
                     view.hide_popup()

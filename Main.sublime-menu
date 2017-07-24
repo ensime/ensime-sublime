@@ -10,7 +10,7 @@
                   { "caption": "Startup", "command": "ensime_startup" },
                   { "caption": "Shutdown", "command": "ensime_shutdown" },
                   { "caption": "-", "id": "development" },
-                  { "caption": "Show errors and warnings", "command": "ensime_show_errors" }
+                  { "caption": "Toggle errors and warnings", "command": "ensime_toggle_errors" }
                 ]
             }
         ]

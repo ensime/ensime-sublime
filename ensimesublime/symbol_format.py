@@ -14,10 +14,10 @@ def completion_to_suggest(completion):
         "abbr": formatted_completion_sig(completion),
         # We show method result/field type in a sepatate column
         "menu": formatted_type(completion["typeInfo"]),
-        # We allow duplicates, needed to show overloaded methods
-        "dup": 1
+        # This is the signature that gets inserted
+        "sig": formatted_completion_sig(completion, forInsertion=True)
     }
-    resp = ("{}\t{:^32.30} {:>10}".format(res["word"], res["abbr"], res["menu"]), res["abbr"])
+    resp = ("{}\t{:^32.30} {:>10}".format(res["word"], res["abbr"], res["menu"]), res["sig"])
     return resp
 
 
@@ -33,7 +33,7 @@ def is_basic_type(completion):
     return completion["typehint"] == "BasicTypeInfo"
 
 
-def formatted_completion_sig(completion):
+def formatted_completion_sig(completion, forInsertion=False):
     """Regenerate signature for methods. Return just the name otherwise"""
     f_result = completion["name"]
     if is_basic_type(completion["typeInfo"]):
@@ -43,9 +43,10 @@ def formatted_completion_sig(completion):
         return f_result
 
     # It's a function type
-    sections = completion["typeInfo"]["paramSections"]
-    f_sections = [formatted_param_section(ps) for ps in sections]
-    return u"{}{}".format(f_result, "".join(f_sections))
+    if not forInsertion:
+        return u"{}{}".format(f_result, formatted_message_params(completion["typeInfo"]))
+    else:
+        return u"{}{}".format(f_result, formatted_insertion_params(completion["typeInfo"]))
 
 
 def formatted_message_params(typeInfo):
@@ -64,6 +65,21 @@ def formatted_param_section(section):
     implicit = "implicit " if section["isImplicit"] else ""
     s_params = [(p[0], formatted_param_type(p[1])) for p in section["params"]]
     return "({}{})".format(implicit, concat_params(s_params))
+
+
+def formatted_insertion_params(typeInfo):
+    sections = typeInfo["paramSections"]
+    section_snippets = []
+    i = 1
+    for param_section in sections:
+        param_snippets = []
+        for param in param_section["params"]:
+            name = param[0]
+            tpe = formatted_param_type(param[1])
+            param_snippets.append("${{{index}:{name}:{type}}}".format(index=i, name=name, type=tpe))
+            i += 1
+        section_snippets.append("(" + ", ".join(param_snippets) + ")")
+    return "".join(section_snippets)
 
 
 def concat_params(params):

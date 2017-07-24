@@ -205,8 +205,9 @@ consequently the context menu commands may take longer to get enabled. You may c
     def handle_completion_info_list(self, call_id, payload):
         """Handler for a completion response."""
         prefix = payload.get("prefix")
-        if (self.env.editor.current_prefix and
+        if (self.env.editor.current_prefix is not None and
                 self.env.editor.current_prefix == prefix):
+            self.env.logger.debug('handle_completion_info_list: in async')
 
             def _hack(prefix):
                 if (sublime.active_window().active_view().is_auto_complete_visible() and
@@ -222,7 +223,7 @@ consequently the context menu commands may take longer to get enabled. You may c
 
         else:
             self.env.editor.current_prefix = payload.get("prefix")
-            self.env.logger.debug('handle_completion_info_list: in')
+            self.env.logger.debug('handle_completion_info_list: in sync')
             # filter out completions without `typeInfo` field to avoid server bug. See #324
             completions = [c for c in payload["completions"] if "typeInfo" in c]
             self.env.editor.suggestions = [completion_to_suggest(c) for c in completions]
