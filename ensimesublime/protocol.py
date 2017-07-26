@@ -11,7 +11,8 @@ from outgoing import AddImportRefactorDesc, TypeCheckFilesReq
 from patch import fromfile
 from config import feedback, gconfig
 from symbol_format import completion_to_suggest, type_to_show
-from paths import root_as_str_from_abspath
+from paths import root_as_str_from_abspath, relative_path
+
 
 class ProtocolHandler(object):
     """Mixin for common behavior of handling ENSIME protocol responses.
@@ -43,7 +44,7 @@ class ProtocolHandler(object):
         self.handlers["FullTypeCheckCompleteEvent"] = self.handle_typecheck_complete
         self.handlers["StringResponse"] = self.handle_string_response
         self.handlers["CompletionInfoList"] = self.handle_completion_info_list
-        # self.handlers["SymbolSearchResults"] = self.handle_symbol_search
+        self.handlers["SymbolSearchResults"] = self.handle_symbol_search
         self.handlers["DebugOutputEvent"] = self.handle_debug_output
         self.handlers["DebugBreakEvent"] = self.handle_debug_break
         self.handlers["DebugBacktrace"] = self.handle_debug_backtrace
@@ -135,7 +136,29 @@ consequently the context menu commands may take longer to get enabled. You may c
         raise NotImplementedError()
 
     def handle_symbol_search(self, call_id, payload):
-        raise NotImplementedError()
+        """Handler for symbol search results"""
+        self.env.logger.debug("handle_symbol_search: in {}".format(Pretty(payload)))
+        item_list = []
+        location_list = []
+        syms = payload["syms"]
+        for sym in syms:
+            p = sym.get("pos")
+            if p:
+                location_list.append((p["file"], p["line"] + 1))
+                path = relative_path(self.env.project_root, str(p["file"]))
+                path_to_display = path if path is not None else str(p["file"])
+                item_list.append(["{}".format(str(sym["name"]).replace("$", ".")),
+                                  "[Line {}] {}".format(p["line"] + 1,
+                                                        path_to_display)])
+
+        def open_item(index):
+            if index == -1:
+                return
+            loc = location_list[index]
+            self.env.window.open_file("{}:{}:{}".format(loc[0], loc[1], 1),
+                                      sublime.ENCODED_POSITION)
+
+        sublime.set_timeout(bind(self.env.window.show_quick_panel, item_list, open_item), 0)
 
     def handle_symbol_info(self, call_id, payload):
         decl_pos = payload.get("declPos")
@@ -164,6 +187,8 @@ consequently the context menu commands may take longer to get enabled. You may c
                 if not offset:
                     offset = view.text_point(line + 1, 1)
                 self.env.logger.debug("Scrolling to offset : {}".format(offset))
+                view.sel().clear()
+                view.sel().add(sublime.Region(offset))
                 view.show_at_center(offset)
             else:
                 self.env.logger.debug("Scrolling failed as the view wasn't ready.")
@@ -240,10 +265,10 @@ consequently the context menu commands may take longer to get enabled. You may c
                                     .format(diff_file))
             return
         self.env.logger.debug("Refactoring get root from: {}"
-                                 .format(self.refactorings[payload['procedureId']]))
+                              .format(self.refactorings[payload['procedureId']]))
         root = root_as_str_from_abspath(self.refactorings[payload['procedureId']])
         self.env.logger.debug("Refactoring set root: {}"
-                                 .format(root))
+                              .format(root))
         result = patch_set.apply(0, root)
         if result:
             file = self.refactorings[payload['procedureId']]

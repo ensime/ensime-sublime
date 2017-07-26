@@ -67,10 +67,11 @@ def relative_path(root, wannabe):
     wannabe = os.path.normcase(os.path.realpath(wannabe))
     return wannabe[len(root) + 1:]
 
+
 def root_as_str_from_abspath(path):
     if os.name != "nt":
-        return "/"   
-    
+        return "/"
+
     # Windows paths are interesting, code below is adjusted from https://pypi.python.org/pypi/pathlib2 z
     sep = '\\'
     altsep = '/'
@@ -84,7 +85,7 @@ def root_as_str_from_abspath(path):
 
     def parse_parts(parts):
         parsed = []
-        
+
         drv = root = ''
         it = reversed(parts)
         for part in it:

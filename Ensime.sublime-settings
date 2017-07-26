@@ -1,7 +1,7 @@
 {
   // binding settings
   "ctrl_click_goes_to_definition": true,
-  "alt_click_inspects_type_at_point": true,
+  "shift_click_inspects_type_at_point": true,
   "single_click_inspects_type_at_point": true,
 
   // status settings
@@ -23,12 +23,12 @@
   // stylistic settings
   "error_highlight": true,
   "error_scope": "invalid.illegal",
-  "error_icon": "",
+  "error_icon": "dot",
   "warning_highlight": false,
   "warning_scope": "invalid.deprecated",
-  "warning_icon": "",
+  "warning_icon": "circle",
   "breakpoint_scope": "ensime.breakpoint",
-  "breakpoint_icon": "circle",
+  "breakpoint_icon": "",
   "debugfocus_scope": "ensime.debugfocus",
   "debugfocus_icon": "",
   "stackfocus_scope": "ensime.stackfocus",

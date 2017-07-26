@@ -10,6 +10,7 @@
                   { "caption": "Startup", "command": "ensime_startup" },
                   { "caption": "Shutdown", "command": "ensime_shutdown" },
                   { "caption": "-", "id": "development" },
+                  { "caption": "Search classpath", "command": "ensime_classpath_search" },
                   { "caption": "Toggle errors and warnings", "command": "ensime_toggle_errors" }
                 ]
             }

@@ -118,6 +118,18 @@ class SymbolAtPointReq(RpcRequest):
                 "point": self.pos}
 
 
+class PublicSymbolSearchReq(RpcRequest):
+    def __init__(self, search_terms, max_results=25):
+        super(PublicSymbolSearchReq, self).__init__()
+        self.search_terms = search_terms
+        self.max_results = max_results
+
+    def json_repr(self):
+        return {"typehint": "PublicSymbolSearchReq",
+                "keywords": self.search_terms,
+                "maxResults": self.max_results}
+
+
 class GenericAtPointReq(RpcRequest):
     def __init__(self, file, contents, pos, what):
         super(GenericAtPointReq, self).__init__()

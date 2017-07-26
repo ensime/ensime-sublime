@@ -9,7 +9,7 @@ import websocket
 # from functools import partial as bind
 
 from protocol import ProtocolHandler
-from util import catch
+from util import catch, Pretty
 from errors import LaunchError
 from outgoing import ConnectionInfoRequest
 from config import gconfig
@@ -190,7 +190,7 @@ class EnsimeClient(ProtocolHandler, DebugHandler):
             self.env.logger.warning('no reply from server for %ss', timeout)
             return None
         result = self.responses[call_id]
-        self.env.logger.debug('result received\n%s', result)
+        self.env.logger.debug('result received\n%s', Pretty(result))
         if result["payload"]:
             self.handle_incoming_response(call_id, result["payload"])
         del self.responses[call_id]

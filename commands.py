@@ -17,7 +17,8 @@ from outgoing import (TypeCheckFilesReq,
                       InlineLocalRefactorDesc,
                       CompletionsReq,
                       TypeAtPointReq,
-                      DocUriAtPointReq)
+                      DocUriAtPointReq,
+                      PublicSymbolSearchReq)
 
 
 class EnsimeStartup(EnsimeWindowCommand):
@@ -58,6 +59,18 @@ class EnsimeToggleErrors(EnsimeWindowCommand):
         else:
             self.env.editor.show_errors = True
             self.env.editor.redraw_all_highlights()
+
+
+class EnsimeClasspathSearch(EnsimeWindowCommand):
+    def is_enabled(self):
+        return bool(self.env and self.env.is_connected() and self.env.client.indexer_ready)
+
+    def run(self):
+        def do_classpath_search(arg):
+            search_items = arg.split()
+            PublicSymbolSearchReq(search_items).run_in(self.env)
+
+        self.window.show_input_panel("Search : ", '', do_classpath_search, None, None)
 
 
 class EnsimeEventListener(sublime_plugin.EventListener):
