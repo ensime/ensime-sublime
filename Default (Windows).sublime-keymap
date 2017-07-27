@@ -1,6 +1,9 @@
 [
-  { "keys": ["alt+i"], "command": "ensime_add_import" },
+  { "keys": ["ctrl+alt+i"], "command": "ensime_add_import" },
   { "keys": ["ctrl+alt+e"], "command": "ensime_toggle_errors" },
   { "keys": ["ctrl+alt+o"], "command": "ensime_organise_imports" },
-  { "keys": ["ctrl+alt+c"], "command": "ensime_classpath_search" }
+  { "keys": ["ctrl+alt+c"], "command": "ensime_classpath_search" },
+  { "keys": ["ctrl+alt+f"], "command": "ensime_find_usages" },
+  { "keys": ["ctrl+alt+d"], "command": "ensime_find_implementations" },
+  { "keys": ["ctrl+alt+g"], "command": "ensime_go_to_definition" }
 ]

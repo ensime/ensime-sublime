@@ -99,25 +99,6 @@ class CompletionsReq(RpcRequest):
                 "reload": self.reLoad}
 
 
-class SymbolAtPointReq(RpcRequest):
-    def __init__(self, file, contents, pos):
-        super(SymbolAtPointReq, self).__init__()
-        self.file_info = self._file_info(file, contents)
-        self.pos = pos
-
-    def _file_info(self, file, contents):
-        """Message fragment for ENSIME ``fileInfo`` field, from current file."""
-        file_info = {"file": file}
-        if contents is not None:
-            file_info.update({"contents": contents})
-        return file_info
-
-    def json_repr(self):
-        return {"typehint": "SymbolAtPointReq",
-                "file": self.file_info,
-                "point": self.pos}
-
-
 class PublicSymbolSearchReq(RpcRequest):
     def __init__(self, search_terms, max_results=25):
         super(PublicSymbolSearchReq, self).__init__()
@@ -146,9 +127,15 @@ class GenericAtPointReq(RpcRequest):
         return file_info
 
     def json_repr(self):
-        return {"typehint": "{}AtPointReq".format(self.what),
-                "file": self.file_info,
-                "{}".format(self.pos_tag): {"from": self.pos, "to": self.pos}}
+        range_types = ["Type", "DocUri"]
+        if self.what in range_types:
+            return {"typehint": "{}AtPointReq".format(self.what),
+                    "file": self.file_info,
+                    "{}".format(self.pos_tag): {"from": self.pos, "to": self.pos}}
+        else:
+            return {"typehint": "{}AtPointReq".format(self.what),
+                    "file": self.file_info,
+                    "point": self.pos}
 
 
 class TypeAtPointReq(GenericAtPointReq):
@@ -162,6 +149,21 @@ class DocUriAtPointReq(GenericAtPointReq):
 
     def call_options(self):
         return {"browse": True}
+
+
+class SymbolAtPointReq(GenericAtPointReq):
+    def __init__(self, file, contents, pos):
+        super(SymbolAtPointReq, self).__init__(file, contents, pos, "Symbol")
+
+
+class UsesOfSymbolAtPointReq(GenericAtPointReq):
+    def __init__(self, file, contents, pos):
+        super(UsesOfSymbolAtPointReq, self).__init__(file, contents, pos, "UsesOfSymbol")
+
+
+class HierarchyOfTypeAtPointReq(GenericAtPointReq):
+    def __init__(self, file, contents, pos):
+        super(HierarchyOfTypeAtPointReq, self).__init__(file, contents, pos, "HierarchyOfType")
 
 
 # ########################## Refactor Requests ##########################

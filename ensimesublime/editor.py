@@ -155,7 +155,7 @@ class Editor(object):
         self.hide_phantoms()
 
     def reload_file(self, file):
-        view = self.w.find_open_file(file)
+        view = self.view_for_file(file)
         if view:
             original_size = view.size()
             original_pos = view.sel()[0].begin()
@@ -177,19 +177,24 @@ class Editor(object):
 
             on_load()
 
-    # WIP
-    def redraw_status_if_on_error(self, view, point):
-        errors = self.notes_storage.for_file(view.file_name())
-        severity = None
-        msg = None
-        for err in errors:
-            if (point >= err.start and point <= err.end):
-                if err.severity == "NoteError":
-                    severity = "ERROR"
-                elif err.severity == "NoteWarn":
-                    severity = "WARNING"
-                else:
-                    severity = "INFO"
-            msg = err.message
-        if msg is not None:
-            pass
+    def scroll(self, view, line=0):
+        if view is not None:
+            view.sel().clear()
+            line = line - 1 if line > 0 else 0
+            offset = view.text_point(line, 0)
+            view.sel().add(sublime.Region(offset))
+            view.show_at_center(offset)
+
+    def view_for_file(self, file):
+        """ Finds the named file in the list of open files, and returns the corresponding View,
+        or None if no such file is open."""
+        return self.w.find_open_file(file)
+
+    def open_and_scroll(self, file, line):
+        view = self.view_for_file(file)
+        if view is not None:
+            self.w.focus_view(view)
+            self.scroll(view, line)
+        else:
+            print("opening..")
+            self.w.open_file("{}:{}:{}".format(file, line, 1), sublime.ENCODED_POSITION)

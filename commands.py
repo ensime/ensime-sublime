@@ -18,7 +18,9 @@ from outgoing import (TypeCheckFilesReq,
                       CompletionsReq,
                       TypeAtPointReq,
                       DocUriAtPointReq,
-                      PublicSymbolSearchReq)
+                      PublicSymbolSearchReq,
+                      UsesOfSymbolAtPointReq,
+                      HierarchyOfTypeAtPointReq)
 
 
 class EnsimeStartup(EnsimeWindowCommand):
@@ -143,6 +145,44 @@ class EnsimeGoToDefinition(EnsimeTextCommand):
             SymbolAtPointReq(view.file_name(),
                              contents,
                              pos).run_in(env, async=True)
+        else:
+            env.status_message("You have multiple cursors. Ensime is confused :/")
+
+
+class EnsimeFindUsages(EnsimeTextCommand):
+    def is_enabled(self):
+        env = getEnvironment(sublime.active_window())
+        return bool(env and env.is_connected() and env.client.indexer_ready)
+
+    def run(self, edit, target=None):
+        env = getEnvironment(self.view.window())
+        view = self.view
+        if len(view.sel()) <= 2:
+            contents = (view.substr(sublime.Region(0, view.size())) if view.is_dirty()
+                        else None)
+            pos = int(target or view.sel()[0].begin())
+            UsesOfSymbolAtPointReq(view.file_name(),
+                                   contents,
+                                   pos).run_in(env, async=True)
+        else:
+            env.status_message("You have multiple cursors. Ensime is confused :/")
+
+
+class EnsimeFindImplementations(EnsimeTextCommand):
+    def is_enabled(self):
+        env = getEnvironment(sublime.active_window())
+        return bool(env and env.is_connected() and env.client.indexer_ready)
+
+    def run(self, edit, target=None):
+        env = getEnvironment(self.view.window())
+        view = self.view
+        if len(view.sel()) <= 2:
+            contents = (view.substr(sublime.Region(0, view.size())) if view.is_dirty()
+                        else None)
+            pos = int(target or view.sel()[0].begin())
+            HierarchyOfTypeAtPointReq(view.file_name(),
+                                      contents,
+                                      pos).run_in(env, async=True)
         else:
             env.status_message("You have multiple cursors. Ensime is confused :/")
 

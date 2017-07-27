@@ -5,6 +5,8 @@
         "children":
         [     { "caption": "Show type", "command": "ensime_show_type" },
               { "caption": "Go to definition", "command": "ensime_go_to_definition" },
+              { "caption": "Find usages", "command": "ensime_find_usages" },
+              { "caption": "Find implementations", "command": "ensime_find_implementations" },
               { "caption": "-", "id": "refactor" },
               { "caption": "Add import", "command": "ensime_add_import" },
               { "caption": "Organise imports", "command": "ensime_organise_imports" },
