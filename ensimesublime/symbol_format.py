@@ -9,10 +9,7 @@ def file_and_line_info(path, line):
     file = str(path).strip()
     if line == 0:
         line = 1
-    if len(file) > 40:
-        file = "..." + file[-37:]
-    print("{:42.40} Line {:4}".format(file, line))
-    return "{:42.40} Line {:4}".format(file, line)
+    return "{} | Line {}".format(file, line)
 
 
 def completion_to_suggest(completion):

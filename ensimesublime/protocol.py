@@ -174,33 +174,42 @@ consequently the context menu commands may take longer to get enabled. You may c
                                    .format(payload.get("name")))
             return
         f = decl_pos.get("file")
+        offset = decl_pos.get("offset")
+        line = decl_pos.get("line")
         if f is None:
             self.env.error_message("Couldn't find the file where it's defined.")
             return
         self.env.logger.debug("Jumping to file : {}".format(f))
-        view = self.env.window.open_file(f)
+        view = self.env.editor.view_for_file(f)
+        if view is None:
+            view = self.env.window.open_file(f)
 
-        # either has line or offset
-        def _scroll_once_loaded(view, offset, line, attempts=10):
-            offset = decl_pos.get("offset")
-            line = decl_pos.get("line")
-            if not offset and not line:
-                self.env.logger.debug("No offset or line number were found.")
-                return
-            if view.is_loading() and attempts:
-                sublime.set_timeout(bind(_scroll_once_loaded, view, offset, line, attempts - 1),
-                                    100)
-                return
-            if not view.is_loading():
+            def _scroll_once_loaded(view, offset, line, attempts=10):
+                if not offset and not line:
+                    self.env.logger.debug("No offset or line number were found.")
+                    return
+                if view.is_loading() and attempts:
+                    sublime.set_timeout(bind(_scroll_once_loaded, view, offset, line, attempts - 1),
+                                        100)
+                    return
+                if not view.is_loading():
+                    if not line:
+                        line, _ = view.rowcol(offset)
+                        line = line + 1
+                    self.env.editor.scroll(view, line)
+                else:
+                    self.env.logger.debug("Scrolling failed as the view didn't get ready in time.")
+
+            sublime.set_timeout(bind(_scroll_once_loaded, view, offset, line, 10), 0)
+        else:
+            def _scroll(view, offset, line):
                 if not line:
                     line, _ = view.rowcol(offset)
+                    line = line + 1
+                self.env.window.focus_view(view)
                 self.env.editor.scroll(view, line)
-            else:
-                self.env.logger.debug("Scrolling failed as the view didn't get ready in.")
 
-        sublime.set_timeout(bind(_scroll_once_loaded,
-                                 view, decl_pos.get("offset"), decl_pos.get("line"), 10),
-                            0)
+            sublime.set_timeout(bind(_scroll, view, offset, line), 0)
 
     def handle_string_response(self, call_id, payload):
         """Handler for response `StringResponse`.
@@ -320,28 +329,24 @@ consequently the context menu commands may take longer to get enabled. You may c
 
     def handle_source_positions(self, call_id, payload):
         self.env.logger.debug("handle_source_positions: in {}".format(Pretty(payload)))
-        positions = payload["positions"]
-        if len(positions) == 0:
+        sourcePositions = payload["positions"]
+        if len(sourcePositions) == 0:
             sublime.set_timeout(bind(self.env.window.active_view().show_popup,
                                      "No usages found.",
                                      sublime.HIDE_ON_MOUSE_MOVE),
                                 0)
             return
-        seen = set()
         location_list = []
         item_list = []
-        for pos in positions:
+        for hint in sourcePositions:
+            pos = hint["position"]
             file = pos["file"]
             line = pos["line"]
-            if (file, line) not in seen:
-                path = encode_path(relative_path(self.env.project_root, str(file)))
-                path_to_display = path if path is not None else str(file)
-                file_line_info = file_and_line_info(path_to_display, line)
-                location_list.append((file, line))
-                item_list.append(file_line_info)
-                seen.add((file, line))
-        # noqa E501 ; hack https://forum.sublimetext.com/t/change-how-the-show-quick-panel-truncates-strings-or-truncate-strings-by-getting-quick-panel-width/20054/7
-        item_list.append("-" * 58)
+            path = encode_path(relative_path(self.env.project_root, str(file)))
+            path_to_display = path if path is not None else str(file)
+            file_line_info = file_and_line_info(path_to_display, line)
+            location_list.append((file, line))
+            item_list.append([hint.get("preview", "no preview available"), file_line_info])
 
         def open_item(index):
             if index == -1:
